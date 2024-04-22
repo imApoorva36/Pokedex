@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>metamask connecting page</title>
+    <script>
+        async function walletconnect(){
+            console.log("here");
+            if(typeof window.ethereum!=="undefined"){
+               const walletaddress = await ethereum.request({method: "eth_requestAccounts"});
+               console.log(walletaddress);
+                console.log("metamask is instlled");
+                document.getElementById("walletaddresstext").innerHTML = walletaddress;
+            }
+            else{
+                console.log("metamask is not installed");
+            }
+        }
+        async function checkwalletbalance(){
+            console.log("check balance" , document.getElementById("walletaddresstext").innerHTML);
+            walletaddress= document.getElementById("walletaddresstext").innerHTML;
+           
+            let walletbalance = await window.ethereum.request({method: "eth_getBalance" , 
+        params: [
+            walletaddress,
+            'latest'
+                ] 
+            }).catch((err) => {
+                console.log("error");
+            });
+            console.log("balance is hex ", walletbalance);
+            console.log("balance is eth ",parseFloat((walletbalance)/ Math.pow(10, 18)) );
+            document.getElementById("walletbalancetext").innerText = parseFloat((walletbalance)/ Math.pow(10, 18))
+        }
+    </script>
+</head>
+<body>
+    <h1>welcome to the web page</h1>
+    <button onclick="walletconnect()">connect your metamask wallet</button>
+    <br>
+    <p id="walletaddresstext"> not yet connected </p>
+    <button onclick="checkwalletbalance()">check your account balance </button>
+    <p id="walletbalancetext">nill</p>
+</body>
+</html>
