@@ -1,38 +1,91 @@
-.App {
-  text-align: center;
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.address {
+  font-size: 16px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.user-section {
+  margin-top: 20px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.user-info {
+  margin-bottom: 10px;
+}
+
+.owned-nfts,
+.nfts-on-sale {
+  margin-bottom: 20px;
+}
+
+.nft-list {
+  list-style: none;
+  padding: 0;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-wrap: wrap;
+}
+
+.nft-item {
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
+.nft-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.sale-btn,
+.buy-btn {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.register-btn,
+.connect-btn,
+.mint-btn,
+.get-owned-btn,
+.get-sale-btn,
+.register-user-btn {
+  margin-top: 10px;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.modal {
+  display: flex;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
-.App-link {
-  color: #61dafb;
+.modal-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 5px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
 }

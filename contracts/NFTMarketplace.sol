@@ -1,36 +1,13 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.24;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-contract Lock {
-    uint public unlockTime;
-    address payable public owner;
-
-    event Withdrawal(uint amount, uint when);
-
-    constructor(uint _unlockTime) payable {
-        require(
-            block.timestamp < _unlockTime,
-            "Unlock time should be in the future"
-        );
-
-        unlockTime = _unlockTime;
-        owner = payable(msg.sender);
-    }
-
-    function withdraw() public {
-
-        require(block.timestamp >= unlockTime, "You can't withdraw yet");
-        require(msg.sender == owner, "You aren't the owner");
-
-        emit Withdrawal(address(this).balance, block.timestamp);
-
-        owner.transfer(address(this).balance);
-    }
+contract NFTMarketplace {
     struct NFT {
         string pokeURL;
         bool isOnSale;
         uint256 sellingPrice;
         address owner;
+        uint256 indPos;
     }
     
     struct User {
@@ -45,26 +22,28 @@ contract Lock {
     uint256 public nextUserId;
     uint256 public nextNFTId;
     
-    // Function to mint an NFT
     function mintNFT(string memory _pokeURL) external {
         uint256 nftId = nextNFTId++;    
-        nfts[nftId] = NFT(_pokeURL, false, 0, msg.sender);
+        nfts[nftId] = NFT(_pokeURL, false, 0, msg.sender, nftId);
         users[userAddressesToIds[msg.sender]].ownedNFTs.push(nftId);
     }
     
-    // Function to return list of NFTs owned by the sender
-    function getOwnedNFTs() external view returns (uint256[] memory) {
-        uint256[] memory ownedNFTs = users[userAddressesToIds[msg.sender]].ownedNFTs;
-        return ownedNFTs;
+    function getOwnedNFTs() external view returns (NFT[] memory) {
+        uint256[] memory ownedNFTIds = users[userAddressesToIds[msg.sender]].ownedNFTs;
+        NFT[] memory ownedNFT = new NFT[](ownedNFTIds.length);
+    
+        for (uint256 i = 0; i < ownedNFTIds.length; i++) {
+            ownedNFT[i] = nfts[ownedNFTIds[i]];
+        }
+        return ownedNFT;
     }
     
-    // Function to return list of NFTs currently on sale
-    function getNFTsOnSale() external view returns (uint256[] memory) {
-        uint256[] memory result = new uint256[](nextNFTId);
+    function getNFTsOnSale() external view returns (NFT[] memory) {
+        NFT[] memory result = new NFT[](nextNFTId);
         uint256 count = 0;
         for (uint256 i = 0; i < nextNFTId; i++) {
             if (nfts[i].isOnSale) {
-                result[count] = i;
+                result[count] = nfts[i];
                 count++;
             }
         }
@@ -74,7 +53,6 @@ contract Lock {
         return result;
     }
     
-    // Function to buy an NFT
     function buyNFT(uint256 _nftId) external {
         require(nfts[_nftId].isOnSale, "NFT is not on sale");
         require(users[userAddressesToIds[msg.sender]].coins >= nfts[_nftId].sellingPrice, "Insufficient funds");
@@ -99,7 +77,6 @@ contract Lock {
         nfts[_nftId].sellingPrice = 0;
     }
     
-    // Function to sell an NFT
     function sellNFT(uint256 _nftId, uint256 _sellingPrice) external {
         require(nfts[_nftId].owner == msg.sender, "You are not the owner of this NFT");
         
@@ -107,7 +84,6 @@ contract Lock {
         nfts[_nftId].sellingPrice = _sellingPrice;
     }
     
-    // Function to register a new user
     function registerUser(string memory _name) external {
         uint256 userId = nextUserId++;
         users[userId].name = _name;
@@ -115,7 +91,6 @@ contract Lock {
         userAddressesToIds[msg.sender] = userId;
     }
 
-    // Function to check if a user is registered and return their name and coins count if registered
     function isRegistered() external view returns (bool, string memory, uint256) {
         uint256 userId = userAddressesToIds[msg.sender];
         if (userId == 0) {
