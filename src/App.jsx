@@ -16,48 +16,30 @@ function App() {
   const [nameInput, setNameInput] = useState("");
   const url = "https://pokeapi.co/api/v2/pokemon/";
 
-  useEffect(() => {
-    async function initialize() {
-      if (window.ethereum) {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        setProvider(provider);
-
-        const accounts = await provider.listAccounts();
-        if (accounts.length > 0) {
-          setConnectedAddress(accounts[0]);
-        }
-
-        const contractAddress = "0x8e8dFf4D3E88A2813b4694c9008dAe89F0fc72a4";
-        const contract = new ethers.Contract(
-          contractAddress,
-          NFTMarketplace.abi,
-          provider.getSigner()
-        );
-        setContract(contract);
-
-        const [registered, name, coins] = await contract.isRegistered();
-        setIsRegistered(registered);
-        setUserName(name);
-        setUserCoins(coins.toString());
-        console.log(registered);
-        console.log(name);
-        console.log(coins.toString());
-
-        if (registered) {
-          const owned = await contract.getOwnedNFTs();
-          setOwnedNFTs(owned);
-        }
-
-        const onSale = await contract.getNFTsOnSale();
-        console.log(onSale);
-        setNFTsOnSale(onSale);
-      } else {
-        console.log("MetaMask is not installed");
-      }
-    }
-
-    initialize();
-  }, []);
+  const extractLastNumber = (url) => {
+      const parts = url.split("/");
+      const lastPart = parts[parts.length - 1];
+      const number = lastPart.replace(/\D/g, "");
+      return number;
+  };
+  const typeColor = {
+    bug: "#26de81",
+    dragon: "#ffeaa7",
+    electric: "#fed330",
+    fairy: "#FF0069",
+    fighting: "#30336b",
+    fire: "#f0932b",
+    flying: "#81ecec",
+    grass: "#00b894",
+    ground: "#EFB549",
+    ghost: "#a55eea",
+    ice: "#74b9ff",
+    normal: "#95afc0",
+    poison: "#6c5ce7",
+    psychic: "#a29bfe",
+    rock: "#2d3436",
+    water: "#0190FF",
+  };
 
   const connectToMetaMask = async () => {
     try {
@@ -141,14 +123,24 @@ function App() {
     }
   };
 
-  const fetchAndGenerateCard = async (pokeUrl, card) => {
-    try {
-      const response = await fetch(pokeUrl);
-      const data = await response.json();
-      generateCard(data, card);
-    } catch (error) {
-      console.error("Error fetching Pokemon data:", error);
+  const fetchAndGenerateCards = async (ownedNFTsT) => {
+    const fragment = document.createDocumentFragment(); // Create a document fragment
+    for (const nft of ownedNFTsT) {
+      try {
+        const modURL = extractLastNumber(nft.pokeURL);
+        const pokeUrl = `https://pokeapi.co/api/v2/pokemon/${modURL}`;
+        const response = await fetch(pokeUrl);
+        const data = await response.json();
+        console.log(data);
+        const card = generateCard(data); // Create the card element
+        fragment.appendChild(card); // Append the card to the fragment
+      } catch (error) {
+        console.error("Error fetching Pokemon data:", error);
+      }
     }
+
+    // Append the fragment to the DOM in one operation
+    document.getElementById("ownedNFTsContainer").appendChild(fragment);
   };
 
   const generateCard = (data, card) => {
@@ -186,25 +178,61 @@ function App() {
         </div>
       </div>
     `;
-    appendTypes(data.types);
-    styleCard(themeColor);
-  };
-
-  const appendTypes = (types) => {
-    types.forEach((item) => {
-      let span = document.createElement("SPAN");
-      span.textContent = item.type.name;
-      document.querySelector(".types").appendChild(span);
-    });
+    styleCard(themeColor, card);
+    console.log("done");
   };
 
   const styleCard = (color, card) => {
-    // const card = document.getElementById("card");
     card.style.background = `radial-gradient(circle at 50% 0%, ${color} 36%, #ffffff 36%)`;
     card.querySelectorAll(".types span").forEach((typeColor) => {
       typeColor.style.backgroundColor = color;
     });
   };
+
+
+  useEffect(() => {
+    async function initialize() {
+      if (window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        setProvider(provider);
+
+        const accounts = await provider.listAccounts();
+        if (accounts.length > 0) {
+          setConnectedAddress(accounts[0]);
+        }
+
+        const contractAddress = "0x8e8dFf4D3E88A2813b4694c9008dAe89F0fc72a4";
+        const contract = new ethers.Contract(
+          contractAddress,
+          NFTMarketplace.abi,
+          provider.getSigner()
+        );
+        setContract(contract);
+
+        const [registered, name, coins] = await contract.isRegistered();
+        setIsRegistered(registered);
+        setUserName(name);
+        setUserCoins(coins.toString());
+        console.log(registered);
+        console.log(name);
+        console.log(coins.toString());
+
+        if (registered) {
+          const owned = await contract.getOwnedNFTs();
+          setOwnedNFTs(owned);
+        }
+
+        const onSale = await contract.getNFTsOnSale();
+        console.log(onSale);
+        setNFTsOnSale(onSale);
+      } else {
+        console.log("MetaMask is not installed");
+      }
+    }
+
+    initialize();
+    fetchAndGenerateCards(ownedNFTs);
+  }, []);
 
   return (
     <div className="container">
@@ -220,13 +248,13 @@ function App() {
             <div className="owned-nfts">
               <h2>Owned NFTs</h2>
               <ul className="nft-list">
+                <div className="owned-nfts" id="ownedNFTsContainer">
+                  {/* Cards will be appended here */}
+                </div>
                 {ownedNFTs.map((nft) => (
                   <li key={nft.indPos} className="nft-item">
-                    <img
-                      src={nft.pokeURL}
-                      alt={nft.pokeURL}
-                      className="nft-image"
-                    />
+                    <div id={`card-${nft.indPos}`} className="nft-card"></div>{" "}
+                    {/* Placeholder for the card */}
                     <button
                       onClick={() => putNFTForSale(nft.indPos)}
                       className="sale-btn"
